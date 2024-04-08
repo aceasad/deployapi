@@ -1,0 +1,83 @@
+{
+	"info": {
+		"_postman_id": "d8860771-bf7b-4ad4-be0c-2f4a8c4bc5ee",
+		"name": "RedMarble",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "23640692",
+		"_collection_link": "https://solar-spaceship-872946.postman.co/workspace/Fountech-API-Workspace~9603c6a9-76f6-45d8-be3a-cf9515cf4cc4/collection/23640692-d8860771-bf7b-4ad4-be0c-2f4a8c4bc5ee?action=share&source=collection_link&creator=23640692"
+	},
+	"item": [
+		{
+			"name": "Predict",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{api}}/predict",
+					"host": [
+						"{{api}}"
+					],
+					"path": [
+						"predict"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Train",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{api}}/train",
+					"host": [
+						"{{api}}"
+					],
+					"path": [
+						"train"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "api",
+			"value": "http://ec2-13-235-51-205.ap-south-1.compute.amazonaws.com:5000",
+			"type": "string"
+		}
+	]
+}
