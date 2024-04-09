@@ -25,8 +25,7 @@ MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
 joblib.load('models/model.pkl')
 
-def load_and_preprocess_data(json_data):
-    data = pd.read_json(json_data)
+def preprocess_data(json_data):
     data.dropna(inplace=True)
     data['winner'] = data['winner'].astype(int)
     data['player_1'] = data['player_1'].str.replace('&lt;', '<').str.replace('&gt;', '>').str.replace('<sp/>', '')
