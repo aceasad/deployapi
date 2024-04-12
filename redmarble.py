@@ -14,6 +14,8 @@ from sklearn.feature_extraction import FeatureHasher
 from sklearn.metrics import classification_report
 from flask import Flask, request, jsonify, render_template
 import joblib
+from sentence_transformers import SentenceTransformer
+
 
 app = Flask(__name__)
 
@@ -23,8 +25,73 @@ MODELS_DIR = Path('./models')
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
-joblib.load('models/model.pkl')
 
+
+VESPENE_UNITS = ["Assimilator", "Extractor", "Refinery"]
+
+SUPPLY_UNITS = ["Overlord", "Overseer", "Pylon", "SupplyDepot"]
+
+WORKER_UNITS = ["Drone", "Probe", "SCV", "MULE"]
+
+BASE_UNITS = ["CommandCenter", "Nexus", "Hatchery", "Lair", "Hive", "PlanetaryFortress", "OrbitalCommand"]
+
+GROUND_UNITS = ["Barracks", "Factory", "GhostAcademy", "Armory", "RoboticsBay", "RoboticsFacility", "TemplarArchive",
+                "DarkShrine", "WarpGate", "SpawningPool", "RoachWarren", "HydraliskDen", "BanelingNest", "UltraliskCavern",
+                "LurkerDen", "InfestationPit"]
+
+AIR_UNITS = ["Starport", "FusionCore", "RoboticsFacility", "Stargate", "FleetBeacon", "Spire", "GreaterSpire"]
+
+TECH_UNITS = ["EngineeringBay", "Armory", "GhostAcademy", "TechLab", "FusionCore", "Forge", "CyberneticsCore",
+              "TwilightCouncil", "RoboticsFacility", "RoboticsBay", "FleetBeacon", "TemplarArchive", "DarkShrine",
+              "SpawningPool", "RoachWarren", "HydraliskDen", "BanelingNest", "UltraliskCavern", "LurkerDen", "Spire",
+              "GreaterSpire", "EvolutionChamber", "InfestationPit"]
+
+ARMY_UNITS = ["Marine", "Colossus", "InfestorTerran", "Baneling", "Mothership", "MothershipCore", "Changeling", "SiegeTank", "Viking", "Reaper",
+              "Ghost", "Marauder", "Thor", "Hellion", "Hellbat", "Cyclone", "Liberator", "Medivac", "Banshee", "Raven", "Battlecruiser", "Nuke", "Zealot",
+              "Stalker", "HighTemplar", "Disruptor", "DarkTemplar", "Sentry", "Phoenix", "Carrier", "Oracle", "VoidRay", "Tempest", "WarpPrism", "Observer",
+              "Immortal", "Adept", "Zergling", "Overlord", "Hydralisk", "Mutalisk", "Ultralisk", "Roach", "Infestor", "Corruptor",
+              "BroodLord", "Queen", "Overseer", "Archon", "Broodling", "InfestedTerran", "Ravager", "Viper", "SwarmHost"]
+
+ARMY_AIR = ["Mothership", "MothershipCore", "Viking", "Liberator", "Medivac", "Banshee", "Raven", "Battlecruiser",
+            "Viper", "Mutalisk", "Phoenix", "Oracle", "Carrier", "VoidRay", "Tempest", "Observer", "WarpPrism", "BroodLord",
+            "Corruptor", "Observer", "Overseer"]
+
+
+
+def count_unit_type(player_units):
+    count_dict = {}
+    unit_types = [
+    'SUPPLY_UNITS',
+    'WORKER_UNITS',
+    'ARMY_UNITS',
+    'ARMY_AIR']
+
+    for unit_type in unit_types:
+        count_dict[unit_type] = 0
+        
+    for unit in player_units.keys():
+
+        if unit in SUPPLY_UNITS:
+            count_dict['SUPPLY_UNITS'] = count_dict['SUPPLY_UNITS'] + player_units[unit]
+
+        if unit in WORKER_UNITS:
+            count_dict['WORKER_UNITS'] = count_dict['WORKER_UNITS'] + player_units[unit]
+        
+        if unit in ARMY_UNITS:
+            count_dict['ARMY_UNITS'] = count_dict['ARMY_UNITS'] + player_units[unit]
+
+        if unit in ARMY_AIR:
+            count_dict['ARMY_AIR'] = count_dict['ARMY_AIR'] + player_units[unit]
+            
+    total = sum(count_dict.values())
+    if count_dict['ARMY_UNITS'] != 0: count_dict['ARMY_UNITS'] = round(count_dict['ARMY_UNITS']/total, 2)
+    if count_dict['WORKER_UNITS'] != 0: count_dict['WORKER_UNITS'] = round(count_dict['WORKER_UNITS']/total, 2)
+
+    if count_dict['SUPPLY_UNITS'] != 0: count_dict['SUPPLY_UNITS'] =round(count_dict['SUPPLY_UNITS']/total, 2)
+    if count_dict['ARMY_AIR'] != 0: count_dict['ARMY_AIR'] = round(count_dict['ARMY_AIR']/total, 2)
+    return count_dict
+        
+        
 def preprocess_data(json_data):
     data.dropna(inplace=True)
     data['winner'] = data['winner'].astype(int)
@@ -116,6 +183,14 @@ def load_latest_model():
     print(latest_model_file)
     return joblib.load(latest_model_file)
 
+
+
+def get_embedding(text, embeding_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')):
+    return embeding_model.encode(text)
+
+def parse_and_count_units(unit_str):
+    unit_counts = Counter(unit_str)
+    return unit_counts
 @app.route('/update_model', methods=['GET'])
 def update_model():
     """
@@ -130,25 +205,63 @@ def update_model():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+import pickle
 
-
+# model, target_encoder, scaler = joblib.load('model_and_preprocessing.pkl')
+with open('model.pkl', 'rb') as file:  
+    model = pickle.load(file)
+    
+with open('encoder.pkl', 'rb') as file:  
+    target_encoder = pickle.load(file)
+    
+with open('scaler.pkl', 'rb') as file:  
+    scaler = pickle.load(file)
 @app.route('/predict', methods=['POST'])
 def predict():
-    json_input = request.json
-    data = pd.json_normalize(json_input)  # Convert JSON to DataFrame
-    data = load_and_preprocess_data(data)  # Assuming preprocessing function can handle DataFrame input
-    data = feature_engineering(data)
+    embeding_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+    json_input = json.loads(request.json)
     
-    # Drop unnecessary columns for prediction
-    data = data.drop(['path', 'winner', 'gameloop', 'player_1_units', 'player_2_units'], axis=1, errors='ignore')
+    df = pd.DataFrame(json_input)  # Convert JSON to DataFrame
+    df = df.reset_index(drop=True)
     
-    # Load the trained model
-    model_path = MODELS_DIR / 'model.pkl'
-    if not model_path.exists():
-        return jsonify({'error': 'Model not found.'}), 404
-    model = joblib.load(model_path)
+    df['p1_embedding'] = df['player_1_units'].apply(lambda x: get_embedding(','.join(x), embeding_model=embeding_model))
+    df['p2_embedding'] = df['player_2_units'].apply(lambda x: get_embedding(','.join(x), embeding_model=embeding_model))
+    df['build'] = df['build'].astype(str)
+    df['embed_dif'] = df['p1_embedding'] - df['p2_embedding']
     
-    predictions = model.predict(data)
+    player_1_units_counts = df['player_1_units'].apply(parse_and_count_units)
+    player_2_units_counts = df['player_2_units'].apply(parse_and_count_units)
+
+
+    p1_unit_types = pd.json_normalize(player_1_units_counts.apply(count_unit_type))
+    p1_unit_types.columns = [f'p1_{col}' for col in p1_unit_types]
+
+    p2_unit_types = pd.json_normalize(player_2_units_counts.apply(count_unit_type))
+    p2_unit_types.columns = [f'p2_{col}' for col in p2_unit_types]
+    
+    # if 'winner' in df.columns:
+    #     final_df = df[['embed_dif', 'map', 'build', 'total_gameloops', 'winner']].copy()
+    #     final_df.columns = ['embeddings', 'map', 'build', 'total_gameloops', 'winner']
+    # else:
+    final_df = df[['embed_dif', 'map', 'build', 'total_gameloops']].copy()
+    final_df.columns = ['embeddings', 'map', 'build', 'total_gameloops']
+    
+    final_df = pd.concat([final_df, p1_unit_types, p2_unit_types], axis=1)
+    final_df.columns = final_df.columns.astype(str)
+    final_df = final_df.dropna()
+    
+    embedding_df = pd.DataFrame(final_df['embeddings'].tolist())
+    final_df = pd.concat([final_df.drop('embeddings', axis=1), embedding_df], axis=1)
+    final_df.columns = final_df.columns.astype(str)
+    cols = [str(col) for col in final_df.columns if col not in  ['winner', 'map', 'build']]
+    final_df[cols] = scaler.transform(final_df[cols])
+    
+    target_encoding_cols = ['map', 'build']
+    final_df[target_encoding_cols] = target_encoder.transform(final_df[target_encoding_cols])
+    
+    
+    col_order = ['map', 'build', 'total_gameloops', 'p1_SUPPLY_UNITS', 'p1_WORKER_UNITS', 'p1_ARMY_UNITS', 'p1_ARMY_AIR', 'p2_SUPPLY_UNITS', 'p2_WORKER_UNITS', 'p2_ARMY_UNITS', 'p2_ARMY_AIR', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48', '49', '50', '51', '52', '53', '54', '55', '56', '57', '58', '59', '60', '61', '62', '63', '64', '65', '66', '67', '68', '69', '70', '71', '72', '73', '74', '75', '76', '77', '78', '79', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92', '93', '94', '95', '96', '97', '98', '99', '100', '101', '102', '103', '104', '105', '106', '107', '108', '109', '110', '111', '112', '113', '114', '115', '116', '117', '118', '119', '120', '121', '122', '123', '124', '125', '126', '127', '128', '129', '130', '131', '132', '133', '134', '135', '136', '137', '138', '139', '140', '141', '142', '143', '144', '145', '146', '147', '148', '149', '150', '151', '152', '153', '154', '155', '156', '157', '158', '159', '160', '161', '162', '163', '164', '165', '166', '167', '168', '169', '170', '171', '172', '173', '174', '175', '176', '177', '178', '179', '180', '181', '182', '183', '184', '185', '186', '187', '188', '189', '190', '191', '192', '193', '194', '195', '196', '197', '198', '199', '200', '201', '202', '203', '204', '205', '206', '207', '208', '209', '210', '211', '212', '213', '214', '215', '216', '217', '218', '219', '220', '221', '222', '223', '224', '225', '226', '227', '228', '229', '230', '231', '232', '233', '234', '235', '236', '237', '238', '239', '240', '241', '242', '243', '244', '245', '246', '247', '248', '249', '250', '251', '252', '253', '254', '255', '256', '257', '258', '259', '260', '261', '262', '263', '264', '265', '266', '267', '268', '269', '270', '271', '272', '273', '274', '275', '276', '277', '278', '279', '280', '281', '282', '283', '284', '285', '286', '287', '288', '289', '290', '291', '292', '293', '294', '295', '296', '297', '298', '299', '300', '301', '302', '303', '304', '305', '306', '307', '308', '309', '310', '311', '312', '313', '314', '315', '316', '317', '318', '319', '320', '321', '322', '323', '324', '325', '326', '327', '328', '329', '330', '331', '332', '333', '334', '335', '336', '337', '338', '339', '340', '341', '342', '343', '344', '345', '346', '347', '348', '349', '350', '351', '352', '353', '354', '355', '356', '357', '358', '359', '360', '361', '362', '363', '364', '365', '366', '367', '368', '369', '370', '371', '372', '373', '374', '375', '376', '377', '378', '379', '380', '381', '382', '383']
+    predictions = model.predict(final_df[col_order])
     return jsonify(predictions.tolist())
 
 
