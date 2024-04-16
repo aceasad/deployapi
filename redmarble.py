@@ -57,47 +57,73 @@ ARMY_AIR = ["Mothership", "MothershipCore", "Viking", "Liberator", "Medivac", "B
             "Corruptor", "Observer", "Overseer"]
 
 
+train_cols = ['build', 'p1_unique_units', 'p2_unique_units', 'unique_diff',
+       'p1_unit_count', 'p2_unit_count', 'unit_count_diff', 'p1_SUPPLY_UNITS',
+       'p1_WORKER_UNITS', 'p1_ARMY_UNITS', 'p1_ARMY_AIR', 'p1_VESPENE_UNITS',
+       'p1_TECH_UNITS', 'p1_GROUND_UNITS', 'p1_AIR_UNITS', 'p2_SUPPLY_UNITS',
+       'p2_WORKER_UNITS', 'p2_ARMY_UNITS', 'p2_ARMY_AIR', 'p2_VESPENE_UNITS',
+       'p2_TECH_UNITS', 'p2_GROUND_UNITS', 'p2_AIR_UNITS',
+       'p1_InvisibleTargetDummy', 'p1_Larva', 'p1_Zergling',
+       'p1_BroodlingEscort', 'p1_Drone', 'p1_Broodling', 'p1_Baneling',
+       'p1_CreepTumorBurrowed', 'p2_InvisibleTargetDummy', 'p2_Larva',
+       'p2_Zergling', 'p2_BroodlingEscort', 'p2_Drone', 'p2_Broodling',
+       'p2_Baneling', 'p2_CreepTumorBurrowed', 'map_2000 Atmospheres LE',
+       'map_Beckett Industries LE', 'map_Blackburn LE', 'map_Cosmic Sapphire',
+       'map_Data-C', 'map_Deathaura LE', 'map_Ephemeron LE',
+       'map_Eternal Empire LE', 'map_Ever Dream LE', 'map_Inside and Out',
+       'map_Jagannatha LE', 'map_Lightshade LE', 'map_Moondance',
+       'map_Nightshade LE', 'map_Oxide LE', 'map_Pillars of Gold LE',
+       'map_Romanticide LE', 'map_Simulacrum LE', 'map_Submarine LE',
+       'map_Triton LE', 'map_Tropical Sacrifice', 'map_Zen LE',
+       'map_[ESL] Cosmic Sapphire', 'map_[ESL] Data-C',
+       'map_[ESL] Inside and Out', 'map_[ESL] Moondance',
+       'map_[ESL] Stargazers', 'map_[ESL] Tropical Sacrifice',
+       'map_[ESL] Waterfall', 'map_others']
+
+
+scale_cols = ['p2_Zergling', 'p2_BroodlingEscort', 'p1_GROUND_UNITS', 'p1_unique_units', 'p2_ARMY_AIR', 'p2_unit_count', 'p1_BroodlingEscort', 'p1_AIR_UNITS', 'p1_unit_count', 'p1_Broodling', 'p2_AIR_UNITS', 'p2_VESPENE_UNITS', 'p2_unique_units', 'p2_GROUND_UNITS', 'p1_SUPPLY_UNITS', 'p2_WORKER_UNITS', 'p1_ARMY_UNITS', 'p2_CreepTumorBurrowed', 'p1_Baneling', 'p1_Zergling', 'build', 'p2_TECH_UNITS', 'p2_Larva', 'p1_InvisibleTargetDummy', 'unique_diff', 'p2_ARMY_UNITS', 'p1_ARMY_AIR', 'p2_InvisibleTargetDummy', 'unit_count_diff', 'p2_Drone', 'p2_Baneling', 'p1_CreepTumorBurrowed', 'p1_WORKER_UNITS', 'p1_TECH_UNITS', 'p1_Larva', 'p1_VESPENE_UNITS', 'p1_Drone', 'p2_Broodling', 'p2_SUPPLY_UNITS']
 
 def count_unit_type(player_units):
     count_dict = {}
-    unit_types = [
-    'SUPPLY_UNITS',
-    'WORKER_UNITS',
-    'ARMY_UNITS',
-    'ARMY_AIR']
+    unit_types = ['SUPPLY_UNITS','WORKER_UNITS','ARMY_UNITS','ARMY_AIR', 'VESPENE_UNITS', 'TECH_UNITS', 'GROUND_UNITS', 'AIR_UNITS']
 
     for unit_type in unit_types:
         count_dict[unit_type] = 0
         
     for unit in player_units.keys():
+        if unit in VESPENE_UNITS: 
+            count_dict['VESPENE_UNITS'] = count_dict['VESPENE_UNITS'] + player_units[unit]
+        if unit in AIR_UNITS:
+            count_dict['AIR_UNITS'] = count_dict['AIR_UNITS'] + player_units[unit]
+        
+        if unit in TECH_UNITS:
+            count_dict['TECH_UNITS'] = count_dict['TECH_UNITS'] + player_units[unit]
+            
+        if unit in GROUND_UNITS:
+            count_dict['GROUND_UNITS'] = count_dict['GROUND_UNITS'] + player_units[unit]
 
         if unit in SUPPLY_UNITS:
             count_dict['SUPPLY_UNITS'] = count_dict['SUPPLY_UNITS'] + player_units[unit]
 
         if unit in WORKER_UNITS:
             count_dict['WORKER_UNITS'] = count_dict['WORKER_UNITS'] + player_units[unit]
-        
+
         if unit in ARMY_UNITS:
             count_dict['ARMY_UNITS'] = count_dict['ARMY_UNITS'] + player_units[unit]
 
         if unit in ARMY_AIR:
             count_dict['ARMY_AIR'] = count_dict['ARMY_AIR'] + player_units[unit]
             
-    total = sum(count_dict.values())
-    if count_dict['ARMY_UNITS'] != 0: count_dict['ARMY_UNITS'] = round(count_dict['ARMY_UNITS']/total, 2)
-    if count_dict['WORKER_UNITS'] != 0: count_dict['WORKER_UNITS'] = round(count_dict['WORKER_UNITS']/total, 2)
+    # total = sum(count_dict.values())
+    # if count_dict['ARMY_UNITS'] != 0: count_dict['ARMY_UNITS'] = round(count_dict['ARMY_UNITS']/total, 2)
+    # if count_dict['WORKER_UNITS'] != 0: count_dict['WORKER_UNITS'] = round(count_dict['WORKER_UNITS']/total, 2)
 
-    if count_dict['SUPPLY_UNITS'] != 0: count_dict['SUPPLY_UNITS'] =round(count_dict['SUPPLY_UNITS']/total, 2)
-    if count_dict['ARMY_AIR'] != 0: count_dict['ARMY_AIR'] = round(count_dict['ARMY_AIR']/total, 2)
+    # if count_dict['SUPPLY_UNITS'] != 0: count_dict['SUPPLY_UNITS'] =round(count_dict['SUPPLY_UNITS']/total, 2)
+    # if count_dict['ARMY_AIR'] != 0: count_dict['ARMY_AIR'] = round(count_dict['ARMY_AIR']/total, 2)
     return count_dict
         
         
-def preprocess_data(json_data):
-    data.dropna(inplace=True)
-    data['winner'] = data['winner'].astype(int)
-    data['player_1'] = data['player_1'].str.replace('&lt;', '<').str.replace('&gt;', '>').str.replace('<sp/>', '')
-    data['player_2'] = data['player_2'].str.replace('&lt;', '<').str.replace('&gt;', '>').str.replace('<sp/>', '')
-    return data
+
 
 def get_column_types(data):
     numeric_cols = data.select_dtypes(include=['float64', 'int64']).columns.tolist()
@@ -184,6 +210,73 @@ def load_latest_model():
     return joblib.load(latest_model_file)
 
 
+def map_filter(value):
+    map_names = ['Romanticide LE', 'Oxide LE', 'Lightshade LE', '2000 Atmospheres LE',
+       'Jagannatha LE', '[ESL] Data-C', '[ESL] Inside and Out', 'Deathaura LE',
+       'Pillars of Gold LE', 'Blackburn LE', '[ESL] Cosmic Sapphire',
+       'Nightshade LE', 'Eternal Empire LE', '[ESL] Moondance',
+       '[ESL] Tropical Sacrifice', 'Data-C', 'Inside and Out', 'Simulacrum LE',
+       '[ESL] Waterfall', 'Moondance', 'Ephemeron LE', 'Triton LE', 'Zen LE',
+       'Ever Dream LE', 'Cosmic Sapphire', '[ESL] Stargazers',
+       'Beckett Industries LE', 'Tropical Sacrifice', 'Submarine LE']
+    
+    if value in map_names: return value
+    else: return 'others'
+
+def preprocess_data(df):
+    df = df[df['map'] != 'TEST__DOCUMENT']
+    df['player_1'] = df['player_1'].str.replace('&lt;', '<').str.replace('&gt;', '>').str.replace('<sp/>', '')
+    df['player_2'] = df['player_2'].str.replace('&lt;', '<').str.replace('&gt;', '>').str.replace('<sp/>', '')
+    # df.drop(['p1_embedding', 'p2_embedding'], axis=1, inplace=True)
+    cols = ['map', 'player_1_units', 'player_1', 'player_2_units', 'player_2', 'build', 'path']
+    df = df[cols]
+    return df
+
+
+def get_unit_cols(df):
+    df['p1_unique_units'] = [len(set(x)) for x in df['player_1_units'].values]
+    df['p2_unique_units'] = [len(set(x)) for x in df['player_2_units'].values]
+    df['unique_diff'] = df['p1_unique_units'] - df['p2_unique_units']
+
+
+    df['p1_unit_count'] = [len(x) for x in df['player_1_units'].values]
+    df['p2_unit_count'] = [len(x) for x in df['player_2_units'].values]
+    df['unit_count_diff'] = df['p1_unit_count'] - df['p2_unit_count']
+    return df
+def get_unit_category_counts(df):
+    player_1_units_counts = df['player_1_units'].apply(parse_and_count_units)
+    player_2_units_counts = df['player_2_units'].apply(parse_and_count_units)
+
+    p1_unit_types = pd.json_normalize(player_1_units_counts.apply(count_unit_type))
+    p1_unit_types.columns = [f'p1_{col}' for col in p1_unit_types]
+
+    p2_unit_types = pd.json_normalize(player_2_units_counts.apply(count_unit_type))
+    p2_unit_types.columns = [f'p2_{col}' for col in p2_unit_types]
+
+    df[p1_unit_types.columns] = p1_unit_types.values
+    df[p2_unit_types.columns] = p2_unit_types.values
+    
+    return df
+
+def get_unit_counts(df):
+    create_unit_cols = ['InvisibleTargetDummy', 'Larva', 'Zergling', 'BroodlingEscort', 'Drone', 'Broodling', 'Baneling', 'CreepTumorBurrowed']
+
+    player_1_units_counts = df['player_1_units'].apply(parse_and_count_units)
+    player_2_units_counts = df['player_2_units'].apply(parse_and_count_units)
+
+    p1_c = pd.json_normalize(player_1_units_counts).fillna(0)
+    p1_c = p1_c[[col for col in create_unit_cols if col in p1_c.columns]]
+    p1_c.columns = [f'p1_{col}' for col in p1_c.columns]
+
+    p2_c = pd.json_normalize(player_2_units_counts).fillna(0)
+    p2_c = p2_c[[col for col in create_unit_cols if col in p2_c.columns]]
+    p2_c.columns = [f'p2_{col}' for col in p2_c.columns]
+
+    p_unit_counts = pd.concat([p1_c, p2_c], axis=1).fillna(0)
+    df[p_unit_counts.columns] = p_unit_counts.values
+    
+    return df
+
 
 def get_embedding(text, embeding_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')):
     return embeding_model.encode(text)
@@ -191,6 +284,7 @@ def get_embedding(text, embeding_model = SentenceTransformer('sentence-transform
 def parse_and_count_units(unit_str):
     unit_counts = Counter(unit_str)
     return unit_counts
+
 @app.route('/update_model', methods=['GET'])
 def update_model():
     """
@@ -208,16 +302,44 @@ def update_model():
 import pickle
 
 # model, target_encoder, scaler = joblib.load('model_and_preprocessing.pkl')
-with open('model.pkl', 'rb') as file:  
+with open('models/model.pkl', 'rb') as file:  
     model = pickle.load(file)
     
-with open('encoder.pkl', 'rb') as file:  
-    target_encoder = pickle.load(file)
+with open('models/encoder.pkl', 'rb') as file:  
+    encoder = pickle.load(file)
     
-with open('scaler.pkl', 'rb') as file:  
+with open('models/scaler.pkl', 'rb') as file:  
     scaler = pickle.load(file)
+    
 @app.route('/predict', methods=['POST'])
 def predict():
+    json_input = json.loads(request.json)
+    df = pd.DataFrame(json_input)  # Convert JSON to DataFrame
+    df = df.reset_index(drop=True)
+    
+    processed_df = preprocess_data(df)
+    processed_df = get_unit_cols(processed_df)
+    processed_df = get_unit_category_counts(processed_df)
+    processed_df = get_unit_counts(processed_df)
+    processed_df['map'] = processed_df['map'].apply(map_filter)
+    
+    numerical_features = processed_df.select_dtypes(include='number').columns.tolist()
+    categorical_features = processed_df.select_dtypes(include= 'object').columns.tolist()
+    
+    processed_df[scale_cols] = scaler.transform(processed_df[scale_cols])
+    
+    map_encoded = encoder.transform(processed_df[['map']])
+    map_encoded_df = pd.DataFrame(map_encoded, columns=encoder.get_feature_names_out(['map']), index=processed_df.index)
+    processed_df = pd.concat([processed_df.drop('map', axis=1), map_encoded_df], axis=1)
+    processed_df = processed_df[train_cols]
+    # print(processed_df.columns)
+    predictions = model.predict(processed_df)
+    
+    return jsonify(predictions.tolist())
+    
+
+@app.route('/predict', methods=['POST'])
+def predict_old():
     embeding_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
     json_input = json.loads(request.json)
     
