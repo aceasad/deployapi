@@ -313,18 +313,20 @@ with open('models/scaler.pkl', 'rb') as file:
     
 @app.route('/predict', methods=['POST'])
 def predict():
-    json_input = json.loads(request.json)
-    df = pd.DataFrame(json_input)  # Convert JSON to DataFrame
+    data = request.json
+    # json_input = json.loads(request.json)
+    df = pd.DataFrame(data)  # Convert JSON to DataFrame
     df = df.reset_index(drop=True)
     
     processed_df = preprocess_data(df)
+
     processed_df = get_unit_cols(processed_df)
     processed_df = get_unit_category_counts(processed_df)
     processed_df = get_unit_counts(processed_df)
     processed_df['map'] = processed_df['map'].apply(map_filter)
+    scale_add = [col for col in scale_cols if col not in processed_df.columns]
+    processed_df[scale_add] = 0
     
-    numerical_features = processed_df.select_dtypes(include='number').columns.tolist()
-    categorical_features = processed_df.select_dtypes(include= 'object').columns.tolist()
     
     processed_df[scale_cols] = scaler.transform(processed_df[scale_cols])
     
@@ -335,6 +337,7 @@ def predict():
     # print(processed_df.columns)
     predictions = model.predict(processed_df)
     
+    print(f"Model Prediction: {predictions}")
     return jsonify(predictions.tolist())
     
 
