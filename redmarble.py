@@ -14,7 +14,7 @@ from sklearn.feature_extraction import FeatureHasher
 from sklearn.metrics import classification_report
 from flask import Flask, request, jsonify, render_template
 import joblib
-from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer
 
 
 app = Flask(__name__)

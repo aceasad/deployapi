@@ -3,3 +3,4 @@ data/
 *.json
 *.csv
 *.sc2replay
+*.pem
